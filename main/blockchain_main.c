@@ -57,40 +57,76 @@ uint8_t *alloc_hex(const char *str, size_t *len)
     return v;
 }
 
-static void create_block_task(void *pvParameter)
+/**
+ * Serialize the inputs to big-endian
+ * @http://davidederosa.com/basic-blockchain-programming/serialization-part-one/
+ *
+ * @param prevBlock
+ * @param nextBlock
+ */
+static void calculateHash(block_t* prevBlock, block_t* nextBlock)
+{
+    // index + previousHash + timestamp + data, 1 + 32 + 8 + 32 = 73
+    uint8_t input[73];
+    * input                     = prevBlock->index;
+    *(input + 1)                = prevBlock->hash[0];
+    *(uint64_t *)(input + 33)   = prevBlock->timestamp;
+    *(input + 41)               = prevBlock->data[0];
+
+    mbedtls_sha256(input, 73, nextBlock->hash, 0);
+}
+
+static void generateBlock(block_t* block, uint8_t* data)
 {
     time_t now;
     time(&now);
-    block_t genesisBlock = { 0, (uint64_t) now, "genesis block", {0x0}, {0x0} };
-    block_t nextBlock    = { 1, (uint64_t) now, "new block", {0x0}, {0x0} };
+    block_t preBlock = getLatestBlock();
+    block->timestamp = (uint64_t)now;
+
+    //TODO: change the array to pointer in the block structure
+    for (int i = 0; i < 32; ++i) {
+        block->data[i] = data[i];
+    }
+
+    block->previousHash[0] = preBlock.hash;
+
+}
+
+static void generateGenesis(block_t* genesis, uint8_t* data)
+{
+    time_t now;
+    time(&now);
+    genesis->index = 0;
+    genesis->timestamp = now;
+    genesis->previousHash 
+}
+
+static void create_block_task(void *pvParameter)
+{
+    block_t genesisBlock, nextBlock;
+
+    const char *genesisHash = "816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7";
+    uint8_t *temp_hash;
+    size_t  temp_len;
+    temp_hash = alloc_hex(genesisHash, &temp_len);
+    generateGenesis(&genesisBlock, temp_hash);
 
     /**
      * parsing an string to hex
      */
-    const char *genesisHash = "816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7";
+
     uint8_t *temp_hash;
     size_t  temp_len;
     temp_hash = alloc_hex(genesisHash, &temp_len);
     memcpy(genesisBlock.hash, temp_hash, temp_len);
     free(temp_hash);
 
-    /**
-     * Serialize the inputs to big-endian
-     * @http://davidederosa.com/basic-blockchain-programming/serialization-part-one/
-     */
-    // index + previousHash + timestamp + data, 1 + 32 + 8 + 32 = 73
-    uint8_t input[73];
-    * input                     = genesisBlock.index;
-    *(input + 1)                = genesisBlock.hash[0];
-    *(uint64_t *)(input + 33)   = genesisBlock.timestamp;
-    *(input + 41)               = genesisBlock.data[0];
-
-    mbedtls_sha256(input, 73, nextBlock.hash, 0);
+    calculateHash(&genesisBlock, &nextBlock);
 
     /**
      * Debug process
-     * */
-    print_hex("start time", (input+33), 8);
+     */
+    print_hex("start time", (uint8_t *)&genesisBlock.timestamp, 8);
     print_hex("genesis block hash", genesisBlock.hash, 32);
     print_hex("next block hash", nextBlock.hash, 32);
     vTaskDelay(10000 / portTICK_PERIOD_MS);
