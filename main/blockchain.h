@@ -8,11 +8,11 @@
 #include "stdint.h"
 
 typedef struct {
-    uint8_t  index;
-    uint64_t timestamp;
-    uint8_t  data[32];
-    uint8_t  previousHash[32];
-    uint8_t  hash[32];
+    uint8_t  index;         // JSON: int
+    uint64_t timestamp;     // JSON: string
+    uint8_t*  dataHash;         // JSON: string, TODO: change to dataHash for firmware
+    uint8_t*  previousHash; // JSON: string
+    uint8_t*  hash;         // JSON: string
 } __attribute__((packed))block_t;
 
 /* Bitcoin block

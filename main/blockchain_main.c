@@ -15,6 +15,7 @@
 #include "blockchain.h"
 #include "mbedtls/sha256.h"
 #include <time.h>
+#include "cJSON.h"
 
 static const char *TAG = "blockchain";
 
@@ -39,6 +40,9 @@ uint8_t bc_hex2byte(const char ch)
     return 0;
 }
 
+/**
+ * parsing an string to hex
+ */
 uint8_t *alloc_hex(const char *str, size_t *len)
 {
     const size_t count = strlen(str) / 2;
@@ -57,46 +61,114 @@ uint8_t *alloc_hex(const char *str, size_t *len)
     return v;
 }
 
-static void create_block_task(void *pvParameter)
+/**
+ * Serialize the inputs to big-endian
+ * @http://davidederosa.com/basic-blockchain-programming/serialization-part-one/
+ *
+ * @param prevBlock
+ * @param nextBlock
+ */
+static void calculateHash(block_t* prevBlock, block_t* nextBlock)
+{
+    // index + previousHash + timestamp + dataHash, 1 + 32 + 8 + 32 = 73
+    uint8_t input[73];
+    * input                     = prevBlock->index;
+    *(input + 1)                = prevBlock->hash[0];
+    *(uint64_t *)(input + 33)   = prevBlock->timestamp;
+    *(input + 41)               = prevBlock->dataHash[0];
+
+    mbedtls_sha256(input, 73, nextBlock->hash, 0);
+}
+
+static void generateBlock(block_t *prevBlock, block_t *block, uint8_t* datahash)
 {
     time_t now;
     time(&now);
-    block_t genesisBlock = { 0, (uint64_t) now, "genesis block", {0x0}, {0x0} };
-    block_t nextBlock    = { 1, (uint64_t) now, "new block", {0x0}, {0x0} };
+//    block_t preBlock = getLatestBlock();
+    block->index = prevBlock->index + (uint8_t)1U;
+    block->timestamp = (uint64_t)now;
+    block->dataHash = malloc(32);
+    block->previousHash = malloc(32);
+    block->hash = malloc(32);
 
-    /**
-     * parsing an string to hex
-     */
-    const char *genesisHash = "816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7";
+//    memcpy(block->dataHash, datahash,  (size_t) 32);
+    memcpy(block->previousHash, prevBlock->hash, (size_t) 32);
+    calculateHash(prevBlock, block);
+}
+
+static void generateGenesis(block_t* genesis, const char* hash_value)
+{
+    time_t now;
+    time(&now);
+    genesis->index = 0;
+    genesis->timestamp = (uint64_t)now;
+    genesis->dataHash = malloc(32);
+    genesis->previousHash = malloc(32);
+    genesis->hash = malloc(32);
+
     uint8_t *temp_hash;
     size_t  temp_len;
-    temp_hash = alloc_hex(genesisHash, &temp_len);
-    memcpy(genesisBlock.hash, temp_hash, temp_len);
+    temp_hash = alloc_hex(hash_value, &temp_len);
+    memcpy(genesis->hash, temp_hash, temp_len);
     free(temp_hash);
+}
+
+static void create_block_task(void *pvParameter)
+{
+    block_t genesisBlock, nextBlock;
+
+    const char *genesisHash = "816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7";
+    generateGenesis(&genesisBlock, genesisHash);
+
+    generateBlock(&genesisBlock, &nextBlock, 0x0);
 
     /**
-     * Serialize the inputs to big-endian
-     * @http://davidederosa.com/basic-blockchain-programming/serialization-part-one/
+     * parse to cJSON
      */
-    // index + previousHash + timestamp + data, 1 + 32 + 8 + 32 = 73
-    uint8_t input[73];
-    * input                     = genesisBlock.index;
-    *(input + 1)                = genesisBlock.hash[0];
-    *(uint64_t *)(input + 33)   = genesisBlock.timestamp;
-    *(input + 41)               = genesisBlock.data[0];
+    cJSON *root = NULL;
+    cJSON *block1, *block2;
+    root = cJSON_CreateObject();
+    cJSON_AddItemToObject(root, "genesis block", block1 = cJSON_CreateObject());
+    cJSON_AddNumberToObject(block1, "index",        genesisBlock.index);
+    cJSON_AddNumberToObject(block1, "timestamp",    genesisBlock.timestamp);
+    cJSON_AddStringToObject(block1, "dataHash",     (const char *)genesisBlock.dataHash);
+    cJSON_AddStringToObject(block1, "previousHash", (const char *)genesisBlock.previousHash);
+    cJSON_AddStringToObject(block1, "currentHash",  (const char *)genesisBlock.hash);
+    cJSON_AddItemToObject(root, "second block", block2 = cJSON_CreateObject());
+    cJSON_AddNumberToObject(block2, "index",        nextBlock.index);
+    cJSON_AddNumberToObject(block2, "timestamp",    nextBlock.timestamp);
+    cJSON_AddStringToObject(block2, "dataHash",     (const char *)nextBlock.dataHash);
+    cJSON_AddStringToObject(block2, "previousHash", (const char *)nextBlock.previousHash);
+    cJSON_AddStringToObject(block2, "currentHash",  (const char *)nextBlock.hash);
 
-    mbedtls_sha256(input, 73, nextBlock.hash, 0);
+    char* print_out = cJSON_Print(root);
+//    char* print_out = cJSON_PrintUnformatted(root);
+    printf("%s \n", print_out);
+    cJSON_Delete(root);
 
     /**
      * Debug process
-     * */
-    print_hex("start time", (input+33), 8);
+     */
+    print_hex("start time", (uint8_t *)&genesisBlock.timestamp, 8);
+    print_hex("data hash", genesisBlock.dataHash, 32);
+    print_hex("genesis prev hash", genesisBlock.previousHash, 32);
     print_hex("genesis block hash", genesisBlock.hash, 32);
+    print_hex("next data hash", nextBlock.dataHash, 32);
+    print_hex("next prev hash", nextBlock.previousHash, 32);
     print_hex("next block hash", nextBlock.hash, 32);
+
+    free(genesisBlock.dataHash);
+    free(genesisBlock.previousHash);
+    free(genesisBlock.hash);
+
+    free(nextBlock.dataHash);
+    free(nextBlock.previousHash);
+    free(nextBlock.hash);
     vTaskDelay(10000 / portTICK_PERIOD_MS);
 
     printf("Restarting now.\n");
     fflush(stdout);
+
     esp_restart();
 }
 
