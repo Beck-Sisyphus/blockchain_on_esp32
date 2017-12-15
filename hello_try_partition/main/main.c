@@ -25,8 +25,7 @@
 
 #include "nvs.h"
 #include "nvs_flash.h"
-
-#define BLOCKSIZE 200
+#include "Flash_RW.h"
 
 static char GENESIS_BLOCK[] = "{\n"
         "\t\t\"index\":0,\n"
@@ -43,68 +42,8 @@ static char SECOND_BLOCK[] = "{\n"
         "\t\t\"currentHash\":\t\"00cbac8588784bf104e8ce5f1e570682ba6df979e33f1b1659208dcb4194e606\"\n"
         "\t}";
 
-static char LATEST_BLOCK_PARTITION_LABEL[] = "latest_block";
-static char CHAIN_PARTITION_LABEL[] = "chain";
-static char VED_BIN_DATA_PARTITION_LABEL[] = "bin_data";
-
 static char latest_block[ BLOCKSIZE+1 ] = { 0 };
 
-static void latest_block_write(size_t dst_offset, const void* src, size_t size)
-{ //write latest block to latest_block_partition
-    const esp_partition_t *latest_block_partition = NULL;
-    esp_err_t err;
-
-    latest_block_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA, &LATEST_BLOCK_PARTITION_LABEL);
-
-    assert(latest_block_partition != NULL);
-    if(!latest_block_partition)
-    {
-        printf("CANNOT find latest_block_partition!!\n");
-    }
-    else
-    {
-        printf("Partition: latest_block is found. address: 0x%08x, size: 0x%08x \n",
-                 latest_block_partition->address, latest_block_partition->size);
-        err = esp_partition_write(latest_block_partition, dst_offset , src , size );
-        if(err == ESP_OK)
-        {
-            printf("esp_partition_write genesis_bolck to latest_block successed!\n");
-        }
-        else
-        {
-            printf("esp_partition_write genesis_bolck to latest_block failed! error = %d\n" , err);
-        }
-    }
-
-}
-
-static void latest_block_read(size_t src_offset, void* dst, size_t size )
-{ //read latest block from latest_block_partition
-    const esp_partition_t *latest_block_partition = NULL;
-    esp_err_t err;
-
-    latest_block_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA, &LATEST_BLOCK_PARTITION_LABEL);
-    assert(latest_block_partition != NULL);
-    if(!latest_block_partition)
-    {
-        printf("CANNOT find latest_block_partition!!\n");
-    }
-    else
-    {
-        printf("Partition: latest_block is found. address: 0x%08x, size: 0x%08x \n",
-               latest_block_partition->address, latest_block_partition->size);
-        err = esp_partition_read(latest_block_partition, src_offset , dst , size );
-        if(err == ESP_OK)
-        {
-            printf("esp_partition_read genesis_bolck from latest_block successed!\n");
-        }
-        else
-        {
-            printf("esp_partition_read genesis_bolck from latest_block failed! error = %d\n" , err);
-        }
-    }
-
-}
 
 void app_main()
 {
@@ -123,8 +62,8 @@ void app_main()
     printf("%dMB %s flash\n", spi_flash_get_chip_size() / (1024 * 1024),
             (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
-    //latest_block_write(0, &GENESIS_BLOCK , sizeof(GENESIS_BLOCK));
-    latest_block_read(0, &latest_block , BLOCKSIZE );
+    latest_block_write( &GENESIS_BLOCK );
+    latest_block_read( &latest_block , BLOCKSIZE );
     if(latest_block[0])
     {
         printf("Latest block: %s",latest_block);
