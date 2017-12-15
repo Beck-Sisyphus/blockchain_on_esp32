@@ -76,27 +76,29 @@ void latest_block_write( const void* src )
     return;
 }
 
-char *latest_block_read( void )
+esp_err_t latest_block_read( void* dst, size_t size )
 { //read latest block from latest_block_partition
     const esp_partition_t *latest_block_partition = NULL;
-    char l_block[BLOCKSIZE] = { 0 };
+
     esp_err_t err;
+
+    if(size != BLOCKSIZE){ESP_LOGE(TAG,"Invalid size!! size should be %d \n",BLOCKSIZE);return ESP_ERR_INVALID_SIZE;}
 
     latest_block_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA,
                                                       &LATEST_BLOCK_PARTITION_LABEL);
     assert(latest_block_partition != NULL);
     if(!latest_block_partition){
-        ESP_LOGE(TAG,"CANNOT find latest_block_partition!!\n");
+        ESP_LOGE(TAG,"CANNOT find latest_block_partition!!\n");return ESP_ERR_NOT_FOUND;
     }else{
         ESP_LOGE(TAG,"Partition: latest_block is found. address: 0x%08x, size: 0x%08x \n",
                latest_block_partition->address, latest_block_partition->size);
 
-        err = esp_partition_read(latest_block_partition, 0 , l_block , BLOCKSIZE );
+        err = esp_partition_read(latest_block_partition, 0 , dst , BLOCKSIZE );
 
-        if(err == ESP_OK){ESP_LOGE(TAG,"esp_partition_read genesis_bolck from latest_block succeed!\n");}
-        else{ESP_LOGE(TAG,"esp_partition_read genesis_bolck from latest_block failed! error = %d\n" , err);}
+        if(err == ESP_OK){ESP_LOGE(TAG,"esp_partition_read genesis_block from latest_block succeed!\n");}
+        else{ESP_LOGE(TAG,"esp_partition_read genesis_block from latest_block failed! error = %d\n" , err); return err;}
     }
-    return l_block;
+    return ESP_OK;
 }
 
 void write_block_on_chain(uint8_t index , const void* src )
@@ -124,17 +126,20 @@ void write_block_on_chain(uint8_t index , const void* src )
     return;
 }
 
-char *read_block_on_chain(uint8_t index)
+esp_err_t read_block_on_chain(uint8_t index , void* dst, size_t size)
 {
     const esp_partition_t *chain_partition = NULL;
     esp_err_t err;
     char block[BLOCKSIZE] = { 0 };
 
+    if(size != BLOCKSIZE){ESP_LOGE(TAG,"Invalid size!! size should be %d \n",BLOCKSIZE);return ESP_ERR_INVALID_SIZE;}
+
+
     chain_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA,
-                                               &VED_CHAIN_PARTITION_LABEL);
+                                               &unv_CHAIN_PARTITION_LABEL);
 
     assert(chain_partition != NULL);
-    if(!chain_partition){ESP_LOGE(TAG,"CANNOT find ved_chain_partition!!\n");}
+    if(!chain_partition){ESP_LOGE(TAG,"CANNOT find ved_chain_partition!!\n");return ESP_ERR_NOT_FOUND;}
     else
     {
         ESP_LOGE(TAG,"Partition: ved_chain is found. address: 0x%08x, size: 0x%08x \n",
@@ -143,9 +148,9 @@ char *read_block_on_chain(uint8_t index)
         err = esp_partition_read(chain_partition, index*BLOCKSIZE , block , BLOCKSIZE );
 
         if(err == ESP_OK){ESP_LOGE(TAG,"Write %d th block on chain succeed!\n", index);}
-        else{ESP_LOGE(TAG,"Write %d th block on chain failed! error = %d\n" , index , err);}
+        else{ESP_LOGE(TAG,"Write %d th block on chain failed! error = %d\n" , index , err);return err;}
     }
-    return block;
+    return ESP_OK;
 }
 
 esp_err_t verified_chain_copy(uint8_t num)
