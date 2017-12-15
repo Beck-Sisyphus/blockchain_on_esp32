@@ -23,6 +23,9 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 
+#include "blockchain_http_request.h"
+#include "Flash_RW.h"
+
 #define EXAMPLE_WIFI_SSID CONFIG_WIFI_SSID
 #define EXAMPLE_WIFI_PASS CONFIG_WIFI_PASSWORD
 #define EXAMPLE_SERVER_IP   CONFIG_SERVER_IP
@@ -31,7 +34,7 @@
 #define BUFFSIZE 1024
 #define TEXT_BUFFSIZE 1024
 
-static const char *TAG = "ota";
+static const char *TAG = "HTTP REQUEST";
 /*an ota data write buffer ready to write to the flash*/
 static char ota_write_data[BUFFSIZE + 1] = { 0 };
 /*an packet receive buffer*/
@@ -70,25 +73,6 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
     return ESP_OK;
 }
 
-static void initialise_wifi(void)
-{
-    tcpip_adapter_init();
-    wifi_event_group = xEventGroupCreate();
-    ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-    wifi_config_t wifi_config = {
-        .sta = {
-            .ssid = EXAMPLE_WIFI_SSID,
-            .password = EXAMPLE_WIFI_PASS,
-        },
-    };
-    ESP_LOGI(TAG, "Setting WiFi configuration SSID %s...", wifi_config.sta.ssid);
-    ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
-    ESP_ERROR_CHECK( esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
-    ESP_ERROR_CHECK( esp_wifi_start() );
-}
 
 /*read buffer by byte still delim ,return read bytes counts*/
 static int read_until(char *buffer, char delim, int len)
@@ -162,7 +146,6 @@ static bool connect_to_http_server()
         ESP_LOGI(TAG, "Connected to server");
         return true;
     }
-    return false;
 }
 
 static void __attribute__((noreturn)) task_fatal_error()
@@ -176,14 +159,14 @@ static void __attribute__((noreturn)) task_fatal_error()
     }
 }
 
-static void ota_example_task(void *pvParameter)
+void http_request_bin_data(void)
 {
     esp_err_t err;
     /* update handle : set by esp_ota_begin(), must be freed via esp_ota_end() */
     esp_ota_handle_t update_handle = 0 ;
     const esp_partition_t *update_partition = NULL;
 
-    ESP_LOGI(TAG, "Starting OTA example...");
+    ESP_LOGI(TAG, "Starting http request of bin data\n");
 
     const esp_partition_t *configured = esp_ota_get_boot_partition();
     const esp_partition_t *running = esp_ota_get_running_partition();
@@ -199,9 +182,10 @@ static void ota_example_task(void *pvParameter)
     /* Wait for the callback to set the CONNECTED_BIT in the
        event group.
     */
+    /*
     xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
                         false, true, portMAX_DELAY);
-    ESP_LOGI(TAG, "Connect to Wifi ! Start to Connect to Server....");
+    ESP_LOGI(TAG, "Connect to Wifi ! Start to Connect to Server....");*/
 
     /*connect to http server*/
     if (connect_to_http_server()) {
@@ -215,7 +199,7 @@ static void ota_example_task(void *pvParameter)
     const char *GET_FORMAT =
         "GET %s HTTP/1.0\r\n"
         "Host: %s:%s\r\n"
-        "User-Agent: esp-idf/1.0 esp32\r\n\r\n";
+        "User-Agent: esp-idf/1.0 esp32_block_chain_node\r\n\r\n";
 
     char *http_request = NULL;
     int get_len = asprintf(&http_request, GET_FORMAT, EXAMPLE_FILENAME, EXAMPLE_SERVER_IP, EXAMPLE_SERVER_PORT);
@@ -233,12 +217,12 @@ static void ota_example_task(void *pvParameter)
         ESP_LOGI(TAG, "Send GET request to server succeeded");
     }
 
-    update_partition = esp_ota_get_next_update_partition(NULL);
-    ESP_LOGI(TAG, "Writing to partition subtype %d at offset 0x%x",
-             update_partition->subtype, update_partition->address);
-    assert(update_partition != NULL);
+    nuv_data_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA,
+                                                  &UNV_DATA_PARTITION_LABEL);
+    assert(nuv_data_partition != NULL);
+    if(!nuv_data_partition){ESP_LOGE(TAG,"CANNOT find nuv_data_partition!!\n");return ESP_ERR_NOT_FOUND;}
 
-    err = esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle);
+    err = esp_ota_begin(nuv_data_partition, OTA_SIZE_UNKNOWN, &update_handle);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "esp_ota_begin failed, error=%d", err);
         task_fatal_error();
@@ -304,6 +288,6 @@ void app_main()
     }
     ESP_ERROR_CHECK( err );
 
-    initialise_wifi();
+
     xTaskCreate(&ota_example_task, "ota_example_task", 8192, NULL, 5, NULL);
 }
