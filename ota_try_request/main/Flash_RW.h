@@ -7,11 +7,11 @@
 //creater: chongzi
 ////////////////////////////////////////////////////////////////////////////////// 	
 
-#define BLOCKSIZE 200
+#define BLOCKSIZE 268
 
 #define LATEST_BLOCK_PARTITION_LABEL "latest_block"
 #define VED_CHAIN_PARTITION_LABEL "ved_chain"
-#define UNV_CHAIN_PARTITION_LABEL "nuv_chain"
+#define UNV_CHAIN_PARTITION_LABEL "unv_chain"
 #define VED_DATA_PARTITION_LABEL "ved_data"
 #define UNV_DATA_PARTITION_LABEL "unv_data"
 

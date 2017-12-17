@@ -37,6 +37,8 @@ int socket_id = -1;
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;
 
+char new_block[BLOCKSIZE] = { 0 };
+
 /* The event group allows multiple bits for each event,
    but we only care about one event - are we connected
    to the AP with an IP? */
@@ -155,7 +157,31 @@ static void ota_example_task(void *pvParameter)
     }
 
     /*send GET request to http server*/
+    http_request_new_block( new_block );
+    ESP_LOGW(TAG,"The new block is :%s",new_block);
+
+    close(socket_id);
+    if (connect_to_http_server()) {
+        ESP_LOGI(TAG, "Connected to http server");
+    } else {
+        ESP_LOGE(TAG, "Connect to http server failed!");
+        task_fatal_error();
+    }
+
+    http_request_whole_chain();
+
+    close(socket_id);
+    if (connect_to_http_server()) {
+        ESP_LOGI(TAG, "Connected to http server");
+    } else {
+        ESP_LOGE(TAG, "Connect to http server failed!");
+        task_fatal_error();
+    }
+
     http_request_bin_data();
+
+
+    close(socket_id);
 
     get_data_header_of_unv_data(&data_header);
 
@@ -178,4 +204,5 @@ void app_main()
 
     initialise_wifi();
     xTaskCreate(&ota_example_task, "ota_example_task", 8192, NULL, 5, NULL);
+
 }
