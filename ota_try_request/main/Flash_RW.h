@@ -34,6 +34,8 @@ esp_err_t verified_data_copy(void);
 
 esp_err_t get_data_header_of_unv_data(void *dst);
 
+esp_err_t get_data_header_of_ved_data(void *dst);
+
 
 #endif
 
