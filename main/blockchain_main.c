@@ -83,10 +83,10 @@ static void calculateHashBlock(block_t *block, uint8_t *dst)
 {
     // index + previousHash + timestamp + dataHash, 1 + 32 + 8 + 32 = 73
     uint8_t input[73];
-    * input                     = block->index;
-    *(input + 1)                = block->previousHash[0];
-    *(input + 33)   = block->timestamp[0];
-    *(input + 41)               = block->dataHash[0];
+    * input       = block->index;
+    *(input + 1)  = block->previousHash[0];
+    *(input + 33) = block->timestamp[0];
+    *(input + 41) = block->dataHash[0];
 
     mbedtls_sha256(input, 73, dst, 0);
 }
@@ -157,10 +157,10 @@ static bool isValidNewBlock(block_t* prevBlock, block_t *newBlock)
  * Add single block the the main cJSON root
  * @param block_to_add
  */
-static void addBlockToJSONRoot(block_t *block_to_add)
+static void addBlockToJSONRoot(cJSON *root,block_t *block_to_add)
 {
     cJSON *newBlock;
-    cJSON_AddItemToObject(chainRoot, "genesis block", newBlock = cJSON_CreateObject());
+    cJSON_AddItemToObject(root, "genesis block", newBlock = cJSON_CreateObject());
     cJSON_AddNumberToObject(newBlock, "index",        block_to_add->index);
     cJSON_AddStringToObject(newBlock, "timestamp",    (const char *)block_to_add->timestamp);
     cJSON_AddStringToObject(newBlock, "dataHash",     (const char *)block_to_add->dataHash);
@@ -172,7 +172,7 @@ static void addBlockToJSONRoot(block_t *block_to_add)
 * Hash the partition data, done
 * TODO: solve the memory size issues
 */
-static void hashRunningPatitionToBlock(block_t *block)
+static void hashRunningPartitionToBlock(block_t *block)
 {
     const esp_partition_t *running = esp_ota_get_running_partition();
     uint8_t *partition_data = (uint8_t *) malloc((size_t)(running->size/10));
@@ -193,20 +193,19 @@ static void create_block_task(void *pvParameter)
 
     generateBlock(genesisBlock, nextBlock, 0x0);
 
-    addBlockToJSONRoot(genesisBlock);
+    addBlockToJSONRoot(chainRoot, genesisBlock);
 
     char *blockInJSON = cJSON_PrintUnformatted(chainRoot);
 
     printf("%s \n", blockInJSON);
     cJSON_Delete(chainRoot);
 
-    hashRunningPatitionToBlock(nextBlock);
-
     /**
      * Rehash the new block
      */
+    hashRunningPartitionToBlock(nextBlock);
     calculateHashBlock(nextBlock, nextBlock->hash);
-    addBlockToJSONRoot(nextBlock);
+    addBlockToJSONRoot(chainRoot, nextBlock);
 
     isValidNewBlock(genesisBlock, nextBlock);
 
