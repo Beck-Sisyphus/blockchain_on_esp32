@@ -254,4 +254,22 @@ esp_err_t get_data_header_of_unv_data(void *dst)
 
 }
 
+esp_err_t get_data_header_of_ved_data(void *dst)
+{
+    const esp_partition_t *ved_data_partition = NULL;
+    esp_err_t err;
+
+    if(dst == NULL){ESP_LOGE(TAG,"NULL pointer!");return ESP_ERR_INVALID_ARG;}
+
+    ved_data_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA,
+                                                  &VED_DATA_PARTITION_LABEL);
+    assert(ved_data_partition != NULL);
+    if(!ved_data_partition){ESP_LOGE(TAG,"CANNOT find ved_data_partition!!\n");return ESP_ERR_NOT_FOUND;}
+
+    err = esp_partition_read(ved_data_partition, ved_data_partition->size - 1 - DATA_HEADER_SIZE , dst , DATA_HEADER_SIZE);
+    if(err != ESP_OK){ESP_LOGE(TAG,"CANNOT read data header from ved_data_partition!\n");return ESP_ERR_NOT_FOUND;}
+
+    return ESP_OK;
+}
+
 

@@ -38,6 +38,7 @@ int socket_id = -1;
 static EventGroupHandle_t wifi_event_group;
 
 char new_block[BLOCKSIZE] = { 0 };
+char some_block[BLOCKSIZE] = { 0 };
 
 /* The event group allows multiple bits for each event,
    but we only care about one event - are we connected
@@ -160,6 +161,11 @@ static void ota_example_task(void *pvParameter)
     http_request_new_block( new_block );
     ESP_LOGW(TAG,"The new block is :%s",new_block);
 
+    latest_block_write( new_block );
+    latest_block_read( some_block , BLOCKSIZE );
+
+    ESP_LOGI(TAG, "The latest block is: %s",some_block);
+
     close(socket_id);
     if (connect_to_http_server()) {
         ESP_LOGI(TAG, "Connected to http server");
@@ -178,14 +184,23 @@ static void ota_example_task(void *pvParameter)
         task_fatal_error();
     }
 
+    verified_chain_copy(2);
+
     http_request_bin_data();
 
 
     close(socket_id);
 
-    get_data_header_of_unv_data(&data_header);
+    verified_data_copy();
+
+    get_data_header_of_ved_data(&data_header);
 
     ESP_LOGI(TAG, "Get Data Header!!!! %s \n",data_header);
+
+    read_block_on_chain(2 , &some_block , BLOCKSIZE);
+
+    ESP_LOGI(TAG, "The second block is: %s",some_block);
+
     return ;
 }
 
