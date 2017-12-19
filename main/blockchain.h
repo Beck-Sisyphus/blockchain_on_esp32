@@ -9,7 +9,8 @@
 
 typedef struct {
     uint8_t  index;         // JSON: int
-    uint64_t timestamp;     // JSON: string
+//    uint64_t timestamp;     // JSON: string
+    uint8_t* timestamp;     // JSON: string
     uint8_t*  dataHash;         // JSON: string, TODO: change to dataHash for firmware
     uint8_t*  previousHash; // JSON: string
     uint8_t*  hash;         // JSON: string

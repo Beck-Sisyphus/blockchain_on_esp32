@@ -1,0 +1,410 @@
+beck@16:16:11@~/Developer/esp/dev/ota$ make erase_flash flash monitor
+Erasing entire flash...
+esptool.py v2.1
+Connecting........_____....._
+Chip is ESP32D0WDQ6 (revision 1)
+Uploading stub...
+Running stub...
+Stub running...
+Erasing flash (this may take a while)...
+Chip erase completed successfully in 0.7s
+Hard resetting...
+Flashing binaries to serial port /dev/tty.SLAB_USBtoUART (app at offset 0x10000)...
+esptool.py v2.1
+Connecting........____
+Chip is ESP32D0WDQ6 (revision 1)
+Uploading stub...
+Running stub...
+Stub running...
+Configuring flash size...
+Auto-detected Flash size: 4MB
+Compressed 18160 bytes to 10746...
+Wrote 18160 bytes (10746 compressed) at 0x00001000 in 0.9 seconds (effective 153.0 kbit/s)...
+Hash of data verified.
+Compressed 467136 bytes to 296334...
+Wrote 467136 bytes (296334 compressed) at 0x00010000 in 26.1 seconds (effective 143.0 kbit/s)...
+Hash of data verified.
+Compressed 3072 bytes to 117...
+Wrote 3072 bytes (117 compressed) at 0x00008000 in 0.0 seconds (effective 1725.7 kbit/s)...
+Hash of data verified.
+
+Leaving...
+Hard resetting...
+MONITOR
+--- WARNING: Serial ports accessed as /dev/tty.* will hang gdb if launched.
+--- Using /dev/cu.SLAB_USBtoUART instead...
+--- idf_monitor on /dev/cu.SLAB_USBtoUART 115200 ---
+--- Quit: Ctrl+] | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H ---
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x3f (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0010,len:4
+load:0x3fff0014,len:5588
+load:0x40078000,len:0
+load:0x40078000,len:12476
+entry 0x40078f74
+W (66) rtc_clk: Possibly invalid CONFIG_ESP32_XTAL_FREQ setting (40MHz). Detected 40 MHz.
+I (36) boot: ESP-IDF v3.0-dev-960-g6cc80996-dirty 2nd stage bootloader
+I (36) boot: compile time 16:09:51
+I (38) boot: Enabling RNG early entropy source...
+I (43) boot: SPI Speed      : 40MHz
+I (47) boot: SPI Mode       : DIO
+I (51) boot: SPI Flash Size : 4MB
+I (55) boot: Partition Table:
+I (59) boot: ## Label            Usage          Type ST Offset   Length
+I (66) boot:  0 nvs              WiFi data        01 02 00009000 00004000
+I (74) boot:  1 otadata          OTA data         01 00 0000d000 00002000
+I (81) boot:  2 phy_init         RF data          01 01 0000f000 00001000
+I (89) boot:  3 factory          factory app      00 00 00010000 00100000
+I (96) boot:  4 ota_0            OTA app          00 10 00110000 00100000
+I (104) boot:  5 ota_1            OTA app          00 11 00210000 00100000
+I (111) boot: End of partition table
+I (115) boot: Defaulting to factory image
+I (120) esp_image: segment 0: paddr=0x00010020 vaddr=0x3f400020 size=0x0f5c8 ( 62920) map
+I (151) esp_image: segment 1: paddr=0x0001f5f0 vaddr=0x3ffb0000 size=0x00a20 (  2592) load
+I (152) esp_image: segment 2: paddr=0x00020018 vaddr=0x400d0018 size=0x4f754 (325460) map
+0x400d0018: _stext at ??:?
+
+I (270) esp_image: segment 3: paddr=0x0006f774 vaddr=0x3ffb0a20 size=0x02758 ( 10072) load
+I (274) esp_image: segment 4: paddr=0x00071ed4 vaddr=0x40080000 size=0x00400 (  1024) load
+0x40080000: _iram_start at /Users/beck/Developer/esp/esp-idf/components/freertos/./xtensa_vectors.S:1675
+
+I (277) esp_image: segment 5: paddr=0x000722dc vaddr=0x40080400 size=0x0fdb8 ( 64952) load
+I (313) esp_image: segment 6: paddr=0x0008209c vaddr=0x400c0000 size=0x00000 (     0) load
+I (322) boot: Loaded app from partition at offset 0x10000
+I (323) boot: Disabling RNG early entropy source...
+I (324) cpu_start: Pro cpu up.
+I (328) cpu_start: Starting app cpu, entry point is 0x40080ef4
+0x40080ef4: call_start_cpu1 at /Users/beck/Developer/esp/esp-idf/components/esp32/./cpu_start.c:220
+
+I (0) cpu_start: App cpu up.
+I (339) heap_init: Initializing. RAM available for dynamic allocation:
+I (345) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM
+I (351) heap_init: At 3FFB9658 len 000269A8 (154 KiB): DRAM
+I (358) heap_init: At 3FFE0440 len 00003BC0 (14 KiB): D/IRAM
+I (364) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM
+I (370) heap_init: At 400901B8 len 0000FE48 (63 KiB): IRAM
+I (377) cpu_start: Pro cpu start user code
+I (59) cpu_start: Starting scheduler on PRO CPU.
+I (0) cpu_start: Starting scheduler on APP CPU.
+I (187) wifi: wifi firmware version: 111e74d
+I (187) wifi: config NVS flash: enabled
+I (187) wifi: config nano formating: disabled
+I (187) system_api: Base MAC address is not set, read default base MAC address from BLK0 of EFUSE
+I (197) system_api: Base MAC address is not set, read default base MAC address from BLK0 of EFUSE
+I (237) wifi: Init dynamic tx buffer num: 32
+I (237) wifi: Init data frame dynamic rx buffer num: 32
+I (237) wifi: Init management frame dynamic rx buffer num: 32
+I (237) wifi: wifi driver task: 3ffbccc4, prio:23, stack:4096
+I (237) wifi: Init static rx buffer num: 10
+I (247) wifi: Init dynamic rx buffer num: 32
+I (247) wifi: Init rx ampdu len mblock:7
+I (257) wifi: Init lldesc rx ampdu entry mblock:4
+I (257) wifi: wifi power manager task: 0x3ffc6450 prio: 21 stack: 2560
+I (267) ota: Setting WiFi configuration SSID beck_hotspot...
+W (267) phy_init: failed to load RF calibration data (0x1102), falling back to full calibration
+I (467) phy: phy_version: 362.0, 61e8d92, Sep  8 2017, 18:48:11, 0, 2
+I (477) wifi: mode : sta (24:0a:c4:0d:be:74)
+I (477) ota: Starting OTA example...
+I (477) ota: Running partition type 0 subtype 0 (offset 0x00010000)
+I (597) wifi: n:1 0, o:1 0, ap:255 255, sta:1 0, prof:1
+I (1577) wifi: state: init -> auth (b0)
+I (1587) wifi: state: auth -> assoc (0)
+I (2587) wifi: state: assoc -> init (4)
+I (2587) wifi: n:1 0, o:1 0, ap:255 255, sta:1 0, prof:1
+I (2707) wifi: n:1 0, o:1 0, ap:255 255, sta:1 0, prof:1
+I (2707) wifi: state: init -> auth (b0)
+I (2717) wifi: state: auth -> assoc (0)
+I (2717) wifi: state: assoc -> run (10)
+I (2767) wifi: connected with beck_hotspot, channel 1
+I (3657) event: sta ip: 172.20.10.10, mask: 255.255.255.240, gw: 172.20.10.1
+I (3657) ota: Connect to Wifi ! Start to Connect to Server....
+I (3657) ota: Server IP: 172.20.10.2 Server Port:8070
+I (3977) ota: Connected to server
+I (3977) ota: Connected to http server
+I (3977) ota: Send GET request to server succeeded
+I (3987) ota: Writing to partition subtype 16 at offset 0x110000
+I (4037) ota: esp_ota_begin succeeded
+I (4037) ota: esp_ota_write header OK
+I (4037) ota: Have written image length 1861
+I (4037) ota: Have written image length 2885
+I (4047) ota: Have written image length 3909
+I (4047) ota: Have written image length 4121
+I (4057) ota: Have written image length 5145
+I (4067) ota: Have written image length 6169
+I (4067) ota: Have written image length 7193
+I (4067) ota: Have written image length 8217
+I (4067) ota: Have written image length 9241
+I (4067) ota: Have written image length 10265
+I (4077) ota: Have written image length 11289
+I (4077) ota: Have written image length 12313
+I (4077) ota: Have written image length 13337
+I (4077) ota: Have written image length 14361
+I (4077) ota: Have written image length 15385
+I (4087) ota: Have written image length 16409
+I (4087) ota: Have written image length 17433
+I (4097) ota: Have written image length 18457
+I (4097) ota: Have written image length 19481
+I (4097) ota: Have written image length 19917
+I (4367) ota: Have written image length 20941
+I (4367) ota: Have written image length 21353
+I (4407) ota: Have written image length 22377
+I (4417) ota: Have written image length 22789
+I (4447) ota: Have written image length 23813
+I (4447) ota: Have written image length 24837
+I (4447) ota: Have written image length 25661
+I (4457) ota: Have written image length 26685
+I (4467) ota: Have written image length 27097
+I (4467) ota: Have written image length 28121
+I (4467) ota: Have written image length 29145
+I (4467) ota: Have written image length 29969
+I (4477) ota: Have written image length 30993
+I (4477) ota: Have written image length 31405
+I (4477) ota: Have written image length 32429
+I (4487) ota: Have written image length 32841
+I (4497) ota: Have written image length 33865
+I (4497) ota: Have written image length 34889
+I (4497) ota: Have written image length 35913
+I (4507) ota: Have written image length 36937
+I (4507) ota: Have written image length 37961
+I (4507) ota: Have written image length 38985
+I (4507) ota: Have written image length 40009
+I (4507) ota: Have written image length 40021
+I (4507) ota: Have written image length 41045
+I (4507) ota: Have written image length 41457
+I (4507) ota: Have written image length 42481
+I (4517) ota: Have written image length 43505
+I (4517) ota: Have written image length 44529
+I (4517) ota: Have written image length 45553
+I (4517) ota: Have written image length 46577
+I (4517) ota: Have written image length 47601
+I (4517) ota: Have written image length 48625
+I (4527) ota: Have written image length 49649
+I (4527) ota: Have written image length 50673
+I (4527) ota: Have written image length 51697
+I (4527) ota: Have written image length 52721
+I (4527) ota: Have written image length 52945
+I (4527) ota: Have written image length 53969
+I (4537) ota: Have written image length 54993
+I (4537) ota: Have written image length 56017
+I (4537) ota: Have written image length 57041
+I (4537) ota: Have written image length 58065
+I (4537) ota: Have written image length 59089
+I (4547) ota: Have written image length 60113
+I (4557) ota: Have written image length 61137
+I (4557) ota: Have written image length 62161
+I (4557) ota: Have written image length 63185
+I (4557) ota: Have written image length 64209
+I (4567) ota: Have written image length 65233
+I (4567) ota: Have written image length 65869
+I (4577) ota: Have written image length 66893
+I (4577) ota: Have written image length 67305
+I (4577) ota: Have written image length 68329
+I (4587) ota: Have written image length 69353
+I (4587) ota: Have written image length 70377
+I (4587) ota: Have written image length 71401
+I (4587) ota: Have written image length 72425
+I (4587) ota: Have written image length 73449
+I (4597) ota: Have written image length 74473
+I (4597) ota: Have written image length 75497
+I (4607) ota: Have written image length 76521
+I (4607) ota: Have written image length 77545
+I (4607) ota: Have written image length 78569
+I (4617) ota: Have written image length 79593
+I (4617) ota: Have written image length 80617
+I (4617) ota: Have written image length 81641
+I (4627) ota: Have written image length 82665
+I (4637) ota: Have written image length 83689
+I (4637) ota: Have written image length 84713
+I (4637) ota: Have written image length 85737
+I (4637) ota: Have written image length 86761
+I (4637) ota: Have written image length 87785
+I (4637) ota: Have written image length 88809
+I (4637) ota: Have written image length 89833
+I (4647) ota: Have written image length 90281
+I (4647) ota: Have written image length 91305
+I (4647) ota: Have written image length 91717
+I (4647) ota: Have written image length 92741
+I (4647) ota: Have written image length 93765
+I (4647) ota: Have written image length 94789
+I (4647) ota: Have written image length 95813
+I (4657) ota: Have written image length 96837
+I (4657) ota: Have written image length 97861
+I (4657) ota: Have written image length 98885
+I (4657) ota: Have written image length 99909
+I (4657) ota: Have written image length 100933
+I (4667) ota: Have written image length 101957
+I (4667) wifi: pm start, type:0
+
+I (4677) ota: Have written image length 102981
+I (4677) ota: Have written image length 104005
+I (4677) ota: Have written image length 104641
+I (4677) ota: Have written image length 105665
+I (4687) ota: Have written image length 106689
+I (4687) ota: Have written image length 107713
+I (4687) ota: Have written image length 108737
+I (4687) ota: Have written image length 109761
+I (4687) ota: Have written image length 110385
+I (4687) ota: Have written image length 111409
+I (4687) ota: Have written image length 112433
+I (4687) ota: Have written image length 113457
+I (4687) ota: Have written image length 114481
+I (4697) ota: Have written image length 115505
+I (4697) ota: Have written image length 116529
+I (4707) ota: Have written image length 117553
+I (4707) ota: Have written image length 118577
+I (4707) ota: Have written image length 119001
+I (4717) ota: Have written image length 120025
+I (4727) ota: Have written image length 120437
+I (4727) ota: Have written image length 121461
+I (4727) ota: Have written image length 122485
+I (4727) ota: Have written image length 123509
+I (4737) ota: Have written image length 124533
+I (4747) ota: Have written image length 125557
+I (4747) ota: Have written image length 126581
+I (4757) ota: Have written image length 127605
+I (4757) ota: Have written image length 128629
+I (4767) ota: Have written image length 129053
+I (4767) ota: Have written image length 130077
+I (4767) ota: Have written image length 131101
+I (4777) ota: Have written image length 132125
+I (4777) ota: Have written image length 133149
+I (4777) ota: Have written image length 134173
+I (4777) ota: Have written image length 134797
+I (4787) ota: Have written image length 135821
+I (4787) ota: Have written image length 136845
+I (4787) ota: Have written image length 137869
+I (4787) ota: Have written image length 138893
+I (4797) ota: Have written image length 139917
+I (4797) ota: Have written image length 140541
+I (4797) ota: Have written image length 141565
+I (4797) ota: Have written image length 142589
+I (4797) ota: Have written image length 143613
+I (4797) ota: Have written image length 144637
+I (4807) ota: Have written image length 145661
+I (4817) ota: Have written image length 146685
+I (4827) ota: Have written image length 147709
+I (4827) ota: Have written image length 148733
+I (4837) ota: Have written image length 149757
+I (4837) ota: Have written image length 150781
+I (4837) ota: Have written image length 151136
+I (4837) ota: Connection closed, all packets received
+I (4847) ota: Total Write binary data length : 151136
+I (4847) esp_image: segment 0: paddr=0x00110020 vaddr=0x3f400020 size=0x04c48 ( 19528) map
+I (4867) esp_image: segment 1: paddr=0x00114c70 vaddr=0x3ffb0000 size=0x02180 (  8576)
+I (4877) esp_image: segment 2: paddr=0x00116df8 vaddr=0x40080000 size=0x00400 (  1024)
+0x40080000: _iram_start at /Users/beck/Developer/esp/esp-idf/components/freertos/./xtensa_vectors.S:1675
+
+I (4877) esp_image: segment 3: paddr=0x00117200 vaddr=0x40080400 size=0x07e14 ( 32276)
+I (4907) esp_image: segment 4: paddr=0x0011f01c vaddr=0x400c0000 size=0x00000 (     0)
+I (4917) esp_image: segment 5: paddr=0x0011f024 vaddr=0x00000000 size=0x00fec (  4076)
+I (4927) esp_image: segment 6: paddr=0x00120018 vaddr=0x400d0018 size=0x14e18 ( 85528) map
+0x400d0018: _stext at ??:?
+
+I (4997) esp_image: segment 0: paddr=0x00110020 vaddr=0x3f400020 size=0x04c48 ( 19528) map
+I (5007) esp_image: segment 1: paddr=0x00114c70 vaddr=0x3ffb0000 size=0x02180 (  8576)
+I (5017) esp_image: segment 2: paddr=0x00116df8 vaddr=0x40080000 size=0x00400 (  1024)
+0x40080000: _iram_start at /Users/beck/Developer/esp/esp-idf/components/freertos/./xtensa_vectors.S:1675
+
+I (5017) esp_image: segment 3: paddr=0x00117200 vaddr=0x40080400 size=0x07e14 ( 32276)
+I (5047) esp_image: segment 4: paddr=0x0011f01c vaddr=0x400c0000 size=0x00000 (     0)
+I (5047) esp_image: segment 5: paddr=0x0011f024 vaddr=0x00000000 size=0x00fec (  4076)
+I (5057) esp_image: segment 6: paddr=0x00120018 vaddr=0x400d0018 size=0x14e18 ( 85528) map
+0x400d0018: _stext at ??:?
+
+I (5147) ota: Prepare to restart system!
+I (5157) wifi: state: run -> init (0)
+I (5157) wifi: pm stop, total sleep time: 0/712774
+
+I (5157) wifi: n:1 0, o:1 0, ap:255 255, sta:1 0, prof:1
+I (5177) wifi: flush txq
+I (5177) wifi: stop sw txq
+I (5177) wifi: lmac stop hw txq
+ets Jun  8 2016 00:22:57
+
+rst:0xc (SW_CPU_RESET),boot:0x3f (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0010,len:4
+load:0x3fff0014,len:5588
+load:0x40078000,len:0
+load:0x40078000,len:12476
+entry 0x40078f74
+I (29) boot: ESP-IDF v3.0-dev-960-g6cc80996-dirty 2nd stage bootloader
+I (29) boot: compile time 16:09:51
+I (30) boot: Enabling RNG early entropy source...
+I (35) boot: SPI Speed      : 40MHz
+I (39) boot: SPI Mode       : DIO
+I (43) boot: SPI Flash Size : 4MB
+I (47) boot: Partition Table:
+I (51) boot: ## Label            Usage          Type ST Offset   Length
+I (58) boot:  0 nvs              WiFi data        01 02 00009000 00004000
+I (66) boot:  1 otadata          OTA data         01 00 0000d000 00002000
+I (73) boot:  2 phy_init         RF data          01 01 0000f000 00001000
+I (81) boot:  3 factory          factory app      00 00 00010000 00100000
+I (88) boot:  4 ota_0            OTA app          00 10 00110000 00100000
+I (96) boot:  5 ota_1            OTA app          00 11 00210000 00100000
+I (103) boot: End of partition table
+I (107) esp_image: segment 0: paddr=0x00110020 vaddr=0x3f400020 size=0x04c48 ( 19528) map
+I (123) esp_image: segment 1: paddr=0x00114c70 vaddr=0x3ffb0000 size=0x02180 (  8576) load
+I (129) esp_image: segment 2: paddr=0x00116df8 vaddr=0x40080000 size=0x00400 (  1024) load
+0x40080000: _iram_start at /Users/beck/Developer/esp/esp-idf/components/freertos/./xtensa_vectors.S:1675
+
+I (135) esp_image: segment 3: paddr=0x00117200 vaddr=0x40080400 size=0x07e14 ( 32276) load
+I (156) esp_image: segment 4: paddr=0x0011f01c vaddr=0x400c0000 size=0x00000 (     0) load
+I (157) esp_image: segment 5: paddr=0x0011f024 vaddr=0x00000000 size=0x00fec (  4076)
+I (164) esp_image: segment 6: paddr=0x00120018 vaddr=0x400d0018 size=0x14e18 ( 85528) map
+0x400d0018: _stext at ??:?
+
+I (206) boot: Loaded app from partition at offset 0x110000
+I (206) boot: Disabling RNG early entropy source...
+I (207) cpu_start: Pro cpu up.
+I (211) cpu_start: Starting app cpu, entry point is 0x40080dc0
+0x40080dc0: start_cpu0_default at /Users/beck/Developer/esp/esp-idf/components/esp32/./cpu_start.c:291
+
+I (203) cpu_start: App cpu up.
+I (221) heap_init: Initializing. RAM available for dynamic allocation:
+I (228) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM
+I (234) heap_init: At 3FFB2990 len 0002D670 (181 KiB): DRAM
+I (240) heap_init: At 3FFE0440 len 00003BC0 (14 KiB): D/IRAM
+I (247) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM
+I (253) heap_init: At 40088214 len 00017DEC (95 KiB): IRAM
+I (259) cpu_start: Pro cpu start user code
+I (277) cpu_start: Starting scheduler on PRO CPU.
+I (0) cpu_start: Starting scheduler on APP CPU.
+{
+	"genesis block":	{
+		"index":	0,
+		"timestamp":	6,
+		"dataHash":	",???????????????????????????????p3??,????????????????????????????????3???e4?,+qT?m???gi^c7ۊ?\u0018#xL\u00147????׸3??,???,+qT?m???gi^c7ۊ?\u0018#xL\u00147??????3???e4?,+qT?m???gi^c7ۊ?\u0018#xL\u00147?????",
+		"previousHash":	",????????????????????????????????3???e4?,+qT?m???gi^c7ۊ?\u0018#xL\u00147????׸3??,???,+qT?m???gi^c7ۊ?\u0018#xL\u00147??????3???e4?,+qT?m???gi^c7ۊ?\u0018#xL\u00147?????",
+		"currentHash":	"?e4?,+qT?m???gi^c7ۊ?\u0018#xL\u00147????׸3??,???,+qT?m???gi^c7ۊ?\u0018#xL\u00147??????3???e4?,+qT?m???gi^c7ۊ?\u0018#xL\u00147?????"
+	},
+	"second block":	{
+		"index":	1,
+		"timestamp":	6,
+		"dataHash":	",???,+qT?m???gi^c7ۊ?\u0018#xL\u00147??????3???e4?,+qT?m???gi^c7ۊ?\u0018#xL\u00147?????",
+		"previousHash":	"?e4?,+qT?m???gi^c7ۊ?\u0018#xL\u00147?????",
+		"currentHash":	"Ã@ҟY?y\u000b?o'?????\u0017?:B2?sq????%,4??"
+	}
+}
+start time: 0600000000000000
+data hash: 2c85fb3fa5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5
+genesis prev hash: 2c85fb3fa5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5
+genesis block hash: 816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7
+next data hash: 2c85fb3f2c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7
+next prev hash: 816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7
+next block hash: c38340d29f59d4790b896f2782fcd5f79b17f33a4232e997737195f7c3e9ac25
+
+start time: 0000000000000000
+data hash: 1485fb3fa5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5
+genesis prev hash: 1485fb3fa5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5
+genesis block hash: 816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7
+next data hash: 3ff228c429f31c6ffc7195f5b7b6d2641c855efc99af0fc5b8fa11dba32391bb
+next prev hash: 816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7
+next block hash: 22ddf81b48be4c077b56d45a9fa1c3a9f5bb58a3a891e05629259ca9900ffb4e
+
