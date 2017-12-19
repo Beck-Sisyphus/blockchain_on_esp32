@@ -1,0 +1,85 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{Blockchain for manufacturing \\
+ A practice for using blockchain on ESP32 microprocessor}
+\author{WANG, Yuqiang & PANG, Sui}
+\date{December 2017}
+
+\usepackage{natbib, graphicx, csquotes, epigraph, listings, url, textcomp, gensymb}
+\usepackage{amsmath,geometry,amscd,amssymb,verbatim,enumerate,mathrsfs,graphicx,CJKutf8,color,scalerel,stackengine,xcolor,polynom, geometry}
+\usepackage{float, subcaption}
+\DeclareGraphicsExtensions{.png}
+\renewcommand{\familydefault}{\rmdefault}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+    The blockchain is a distributed database that maintains a continously growing list of records called blocks secured from tampering and revision. Adding on top of of cyprotographic principles and technics including zero-knowledge proof, we have seen a few opportunities in the industrial robot industry.
+
+    In the automation industry of Japan and Europe, only two parties are involved in building an assembly line, the industrial robot companies who seal the robots, and the manufacturing companies who use them. However, the industry is less monopolized in China, and there usually multiple parties involved, and figuring out responsibility in a malfunction situation is hard. If a manufacturing company purchases the mechanical robot arm body and the electrical controller from seperate companies, for instance, the robot arm from Capek Robotics and the electrical controller from Googol Tehc, when malfunctions occur, it is hard to analysis if its a mechanical, electrical, or software error. In a situation like this, the raw data from the robot sensors are required for analysis to determine the reliability, yet the manufacturing company was willing to offer or analysis these data, worrying a leak on critical manufacturing process. The manufacturing company will usually blame the controller company first, and ask the latter for compensation. In the same time, the controller supplier will worry if the data is tempered for more compensation. Hence a need is created for the controller supplier either to deploy a zero-knowledge proof to the manufacturing company that it is not their fault without showing them the method, or to build a private chain network for sharing these data with a trusted record and a lower maintance cost.
+
+    Currently most of the blockchain application we seen are developed on commercial electronics. However these electronics are not widely accepted in the industry for consideration on cost, power consumption, and electro magnetic compatibility. We used a hardware constrainted microprocessor to fit the need of the industry and deployed a blockchain for sharing informations.
+
+\section{Objective}
+    In this project, we plan to design a blockchain in an embedded platform to update firmware in a distributed manner. Instead of getting the next firmware version from a central server, the embedded device will get a verified update from the broadcast of nearby nodes.
+
+\section{Methodology}
+    We choose the ESP32 microprocessor from Espressif Systems for its hardware level integration for SHA-256 function and common wireless communication protocals. The specification of the board is followed:
+    \begin{itemize}
+      \item Xtensa Dual-core 32-bit microprocessor, running at 240MHz
+      \item 448 KByte ROM
+      \item 520 KByte SRAM
+      \item 4 x 16MBytes Flash
+      \item Bluetooth 4.2
+      \item Wifi 802.11 n(2.4GHz)
+      \item SHA, AES, RSA, RNG Accelerator
+    \end{itemize}
+
+    The major four challenges we faced are the hashed blockchain data structure, the flash memory management, web server and http requests, and over-the-air firmware flash. The first three challenges are the core blockchain problem, while the last one is a design choice for implementation and demonstration. To understand and implement the blockchain from an engineering prospective, we decide not to utilize an existing platform, but to build a blockchain from scatch. The blockchain we build are simplified and weak in scalability, but have all the core functionality nonethelss.
+
+    \subsection{hashed data structure}
+        The block is stored in array in fixed memory address with the following data structure:
+        \begin{itemize}
+          \item index
+          \item timestamp
+          \item hash value of the .bin data
+          \item hash value of the previous block
+          \item hash value of the current block
+        \end{itemize}
+
+        The hash function we choose is SHA-256, a subclass of the Secure Hash Algorithm. We utilize the hardware SHA-256 solver on the ESP32 chip for non-blocking thread calculation.
+
+        All items in the block are stored in the array of 8-bit unsigned integer for the ease to integrate with the SHA-256 solver.
+
+    \subsection{flash memory management}
+        In order to store a small scale of array, the flash memory on chip is partitioned and utilized for data management. The partition table on the chip is hand crafted, and can be simplified to four partitions:
+        \begin{itemize}
+          \item unchangeable kernel and over-the-air function
+          \item changeable, verified, running applications
+          \item verified blockchain and the application file waiting to be flashed
+          \item unverified new blocks
+        \end{itemize}
+
+        For the demonstration purpose, all flash memory sizes are fixed.
+
+    \subsection{web server and http requests}
+        A simple web server with hardcored IP address is writen to the chip for access the upcoming data. The data are transmitted through web socket in JSON format.
+
+    \subsection{over-the-air firmware flash}
+        The verified application binary will be flashed on board in an over-the-air process.
+
+\section{Experimental evaluation}
+    We have successively made two hand writen blocks on the server, transmitted through hardcored webserver, stored and verified locally on chip.
+
+\section{Analysis}
+
+
+\section{Conclusion}
+
+
+\bibliographystyle{plain}
+\bibliography{references}
+\end{document}
