@@ -39,6 +39,7 @@ static char* http_url=NULL;
 
 static int32_t socket_fd, client_fd;
 #define RES_HEAD "HTTP/1.1 200 OK\r\nContent-type: %s\r\nTransfer-Encoding: chunked\r\n\r\n"
+#define RES_HEAD2 "HTTP/1.1 200 OK\r\nContent-type: %s\r\nContent-Length:%d\r\n\r\n"
 static char chunk_len[15];
 
 
@@ -111,65 +112,101 @@ const HttpHandleTypeDef http_handle[]={
 
 static void return_bin_file( void )
 {
-    uint32_t total_len = 0;
-    uint32_t read_len = 0;
-    char* read_buf = malloc(BUFFSIZE+1);
-    char* data_header = malloc(DATA_HEADER_SIZE+1);
-    const esp_partition_t *ved_data_partition = NULL;
+	uint32_t total_len = 0;
+	uint32_t read_len = 0;
+	char* read_buf = malloc(BUFFSIZE+1);
+	char* data_header = malloc(DATA_HEADER_SIZE+1);
+	const esp_partition_t *ved_data_partition = NULL;
 
-    //get the total_len of bin file
-    esp_err_t err = get_data_header_of_ved_data(  data_header  );
-    if(err != ESP_OK){ESP_LOGE(TAG,"Get data header failed! error type: %d",err);}
+	//get the total_len of bin file
+	esp_err_t err = get_data_header_of_ved_data(  data_header  );
+	if(err != ESP_OK){ESP_LOGE(TAG,"Get data header failed! error type: %d",err);}
 
-    cJSON *root = NULL;//refer to cJSON library**
-    root= cJSON_Parse(data_header);//turn string(data_header) to cJSON object**
-    total_len = cJSON_GetObjectItem(root,"length")->valueint;//give value int of "led" to led**
-    cJSON_Delete(root);//release the area of root**
-    free(data_header);
+	cJSON *root = NULL;//refer to cJSON library**
+	root= cJSON_Parse(data_header);//turn string(data_header) to cJSON object**
+	total_len = cJSON_GetObjectItem(root,"length")->valueint;
+	cJSON_Delete(root);//release the area of root**
+	free(data_header);
 
-    //get ved_data_partition
-    ved_data_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA,
-                                                  &VED_DATA_PARTITION_LABEL);
-    assert(ved_data_partition != NULL);
-    if(!ved_data_partition){ESP_LOGE(TAG,"CANNOT find ved_data_partition!!\n");return ESP_ERR_NOT_FOUND;}
+	//get ved_data_partition
+	ved_data_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA,
+												  &VED_DATA_PARTITION_LABEL);
+	assert(ved_data_partition != NULL);
+	if(!ved_data_partition){ESP_LOGE(TAG,"CANNOT find ved_data_partition!!\n");return ESP_ERR_NOT_FOUND;}
 
-    while(1)
-    {
-        err = esp_partition_read(ved_data_partition, read_len , read_buf , BUFFSIZE);
-        if(err != ESP_OK){ESP_LOGI(TAG,"patition read error. error type: %d",err);}
+	while(1)
+	{
+		err = esp_partition_read(ved_data_partition, read_len , read_buf , BUFFSIZE);
+		if(err != ESP_OK){ESP_LOGI(TAG,"patition read error. error type: %d",err);}
 
-        if(read_len < total_len)
-        {
-            sprintf(chunk_len , "%x\r\n" , BUFFSIZE);
-            write(client_fd , chunk_len , strlen(chunk_len));
-            write(client_fd , read_buf , BUFFSIZE);
-            write(client_fd , "\r\n" , 2);
+		if(read_len < total_len)
+		{
+			if(total_len-read_len >= BUFFSIZE)
+			{
 
-            read_len += BUFFSIZE;
-        }
-        else break;
-    }
+				//sprintf(chunk_len , "%x\r\n" , BUFFSIZE);
+				//write(client_fd , chunk_len , strlen(chunk_len));
+				write(client_fd , read_buf , BUFFSIZE);
+				//write(client_fd , "\r\n" , 2);
 
-    chunk_end(client_fd);
-    free(read_buf);
+				read_len += BUFFSIZE;
+				ESP_LOGI(TAG,"total_len == %d ,read_len = %d",total_len , read_len);
+			}
+			else
+			{
+
+				//sprintf(chunk_len , "%x\r\n" , total_len - read_len);
+				//write(client_fd , chunk_len , strlen(chunk_len));
+				write(client_fd , read_buf , total_len - read_len);
+				//write(client_fd , "\r\n" , 2);
+
+				read_len = total_len;
+				ESP_LOGI(TAG,"total_len == %d ,read_len = %d",total_len , read_len);
+			}
+
+		}
+		else break;
+	}
+
+	//chunk_end(client_fd);
+	free(read_buf);
 }
 
 
 static void return_new_block( void )
 {
 
-    sprintf(chunk_len , "%x\r\n" , BLOCKSIZE);
-    write(client_fd , chunk_len , strlen(chunk_len));
-    write(client_fd , latest_block , BLOCKSIZE);
-    write(client_fd , "\r\n" , 2);
-    chunk_end(client_fd);
+	uint32_t i=0;
+	char* read_buf = malloc(BLOCKSIZE+1);
 
+	while(1)
+	{
+		if(i < 1)
+		{
+			esp_err_t err = latest_block_read( read_buf , BLOCKSIZE);
+			if(err != ESP_OK){ESP_LOGE(TAG,"Read block %d on chain failed. error type:%d", i , err);}
+			else
+			{
+
+				//sprintf(chunk_len,"%x\r\n",BLOCKSIZE);
+				//write(client_fd, chunk_len, strlen(chunk_len));
+				write(client_fd, read_buf, BLOCKSIZE);
+				//write(client_fd, "\r\n", 2);
+
+				i++;
+			}
+		}
+		else break;
+	}
+	//chunk_end(client_fd);
+	free(read_buf);
 }
 
 static void return_whole_chain( void )
 {
 	uint32_t i=0;
-	char* read_buf = malloc(BLOCKSIZE);
+	char *read_buf = malloc(BLOCKSIZE);
+	char *request = malloc(BLOCKSIZE);
 
 	cJSON *root = NULL;//refer to cJSON library**
 	root= cJSON_Parse(latest_block);//turn string(data_header) to cJSON object**
@@ -185,46 +222,77 @@ static void return_whole_chain( void )
 			else
 			{
 				ESP_LOGI(TAG,"Read block %d on chain succeed!. content: %s", i , read_buf);
-				sprintf(chunk_len,"%x\r\n",BLOCKSIZE);
-				write(client_fd, chunk_len, strlen(chunk_len));
+
+				//sprintf(chunk_len,"%x\r\n",BLOCKSIZE);
+				//write(client_fd, chunk_len, strlen(chunk_len));
 				write(client_fd, read_buf, BLOCKSIZE);
-				write(client_fd, "\r\n", 2);
+				//write(client_fd, "\r\n", 2);
+				ESP_LOGI(TAG,"string length of request: %d ", strlen(chunk_len));
 
 				i++;
 			}
 		}
 		else break;
 	}
-	chunk_end(client_fd);
+	//chunk_end(client_fd);
 	free(read_buf);
+	free(request);
 }
 
 
 void http_response_new_block(http_parser* a,char*url,char* body)
 {
-    char *request;
-    asprintf(&request,RES_HEAD,"single block/json");//html
-    write(client_fd, request, strlen(request));
-    free(request);
-    return_new_block();
+	char *request;
+	asprintf(&request,RES_HEAD2,"text/plain",BLOCKSIZE);//html
+	write(client_fd, request, strlen(request));
+	free(request);
+	return_new_block();
+
+	ESP_LOGI(TAG,"write latest_block : %s", latest_block);
 }
 
 void http_response_whole_chain(http_parser* a,char*url,char* body)
 {
-    char *request;
-    asprintf(&request,RES_HEAD,"single block/json");//html
-    write(client_fd, request, strlen(request));
-    free(request);
-    return_whole_chain();
+	char *request;
+
+	//get the index of latest_block -> la_index
+	cJSON *root = NULL;//refer to cJSON library**
+	root= cJSON_Parse(latest_block);//turn string(data_header) to cJSON object**
+	uint32_t la_index = cJSON_GetObjectItem(root,"index")->valueint;//give value int of "led" to led**
+	cJSON_Delete(root);//release the area of root**
+
+	//send header
+	asprintf(&request,RES_HEAD2,"text/plain", (la_index+1)*BLOCKSIZE);
+	write(client_fd, request, strlen(request));
+	ESP_LOGI(TAG,"string length of request: %d ", strlen(request));
+	free(request);
+
+	//send body part
+	return_whole_chain();
 }
 
 void http_response_data_file(http_parser* a,char*url,char* body)
 {
-    char *request;
-    asprintf(&request,RES_HEAD,"single block/json");//html
-    write(client_fd, request, strlen(request));
-    free(request);
-    return_bin_file();
+	char *request;
+	char* data_header = malloc(DATA_HEADER_SIZE+1);
+
+	//get the total_len of bin file
+	esp_err_t err = get_data_header_of_ved_data(  data_header  );
+	if(err != ESP_OK){ESP_LOGE(TAG,"Get data header failed! error type: %d",err);}
+	cJSON *root = NULL;//refer to cJSON library**
+	root= cJSON_Parse(data_header);//turn string(data_header) to cJSON object**
+	uint32_t total_len = cJSON_GetObjectItem(root,"length")->valueint;
+	cJSON_Delete(root);//release the area of root**
+	free(data_header);
+	ESP_LOGI(TAG,"The length of data file is: %d", total_len);
+
+	//send header
+	asprintf(&request,RES_HEAD2,"text/plain",total_len);//html
+	write(client_fd, request, strlen(request));
+	free(request);
+
+	//send body part
+	return_bin_file();
 }
 
 
