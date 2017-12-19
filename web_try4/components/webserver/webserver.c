@@ -104,7 +104,7 @@ void http_response_data_file(http_parser* a,char*url,char* body);
 
 static void not_find();
 const HttpHandleTypeDef http_handle[]={
-	{"/", http_response_new_block},
+	{"/", http_response_data_file},
 	{"/api/led/",http_response_whole_chain},
 	{"/static/logo.png",not_find},
 	{"/static/esp32.png",not_find},
@@ -223,10 +223,10 @@ static void return_whole_chain( void )
 			{
 				ESP_LOGI(TAG,"Read block %d on chain succeed!. content: %s", i , read_buf);
 
-				sprintf(chunk_len,"%x\r\n",BLOCKSIZE);
-				write(client_fd, chunk_len, strlen(chunk_len));
+				//sprintf(chunk_len,"%x\r\n",BLOCKSIZE);
+				//write(client_fd, chunk_len, strlen(chunk_len));
 				write(client_fd, read_buf, BLOCKSIZE);
-				write(client_fd, "\r\n", 2);
+				//write(client_fd, "\r\n", 2);
 				ESP_LOGI(TAG,"string length of request: %d ", strlen(chunk_len));
 
 				i++;
@@ -234,7 +234,7 @@ static void return_whole_chain( void )
 		}
 		else break;
 	}
-	chunk_end(client_fd);
+	//chunk_end(client_fd);
 	free(read_buf);
 	free(request);
 }
@@ -254,19 +254,44 @@ void http_response_new_block(http_parser* a,char*url,char* body)
 void http_response_whole_chain(http_parser* a,char*url,char* body)
 {
     char *request;
-    asprintf(&request,RES_HEAD,"text/plain");//html
+
+    //get the index of latest_block -> la_index
+	cJSON *root = NULL;//refer to cJSON library**
+	root= cJSON_Parse(latest_block);//turn string(data_header) to cJSON object**
+	uint32_t la_index = cJSON_GetObjectItem(root,"index")->valueint;//give value int of "led" to led**
+	cJSON_Delete(root);//release the area of root**
+
+    //send header
+	asprintf(&request,RES_HEAD2,"text/plain", (la_index+1)*BLOCKSIZE);
     write(client_fd, request, strlen(request));
 	ESP_LOGI(TAG,"string length of request: %d ", strlen(request));
     free(request);
+
+	//send body part
     return_whole_chain();
 }
 
 void http_response_data_file(http_parser* a,char*url,char* body)
 {
     char *request;
-    asprintf(&request,RES_HEAD,"text/plain");//html
+	char* data_header = malloc(DATA_HEADER_SIZE+1);
+
+	//get the total_len of bin file
+	esp_err_t err = get_data_header_of_ved_data(  data_header  );
+	if(err != ESP_OK){ESP_LOGE(TAG,"Get data header failed! error type: %d",err);}
+	cJSON *root = NULL;//refer to cJSON library**
+	root= cJSON_Parse(data_header);//turn string(data_header) to cJSON object**
+	uint32_t total_len = cJSON_GetObjectItem(root,"length")->valueint;
+	cJSON_Delete(root);//release the area of root**
+	free(data_header);
+	ESP_LOGI(TAG,"The length of data file is: %d", total_len);
+
+	//send header
+    asprintf(&request,RES_HEAD2,"text/plain",total_len);//html
     write(client_fd, request, strlen(request));
     free(request);
+
+	//send body part
     return_bin_file();
 }
 
