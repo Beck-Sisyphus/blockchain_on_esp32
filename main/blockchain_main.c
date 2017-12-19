@@ -172,12 +172,12 @@ static void addBlockToJSONRoot(cJSON *root,block_t *block_to_add)
 * Hash the partition data, done
 * TODO: solve the memory size issues
 */
-static void hashRunningPartitionToBlock(block_t *block)
+static void hashRunningPartitionToBlock(uint8_t *blockDataHash)
 {
     const esp_partition_t *running = esp_ota_get_running_partition();
     uint8_t *partition_data = (uint8_t *) malloc((size_t)(running->size/10));
     esp_partition_read(running, 0, partition_data, (size_t)(running->size/10));
-    mbedtls_sha256(partition_data, (size_t)(running->size/10), block->dataHash, 0);
+    mbedtls_sha256(partition_data, (size_t)(running->size/10), blockDataHash, 0);
     free(partition_data);
 }
 
@@ -185,25 +185,26 @@ static void create_block_task(void *pvParameter)
 {
     chainRoot = cJSON_CreateObject();
 
+    /**
+     * Create genesis block
+     */
     block_t *genesisBlock = malloc(sizeof(block_t));
-    block_t *nextBlock = malloc(sizeof(block_t));
-
     const char *genesisHash = "816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7";
     generateGenesis(genesisBlock, genesisHash);
-
-    generateBlock(genesisBlock, nextBlock, 0x0);
 
     addBlockToJSONRoot(chainRoot, genesisBlock);
 
     char *blockInJSON = cJSON_PrintUnformatted(chainRoot);
-
     printf("%s \n", blockInJSON);
     cJSON_Delete(chainRoot);
 
     /**
-     * Rehash the new block
+     * Create the new block, add the data hash, and rehash the block
      */
-    hashRunningPartitionToBlock(nextBlock);
+    block_t *nextBlock = malloc(sizeof(block_t));
+
+    generateBlock(genesisBlock, nextBlock, 0x0);
+    hashRunningPartitionToBlock(nextBlock->dataHash);
     calculateHashBlock(nextBlock, nextBlock->hash);
     addBlockToJSONRoot(chainRoot, nextBlock);
 
