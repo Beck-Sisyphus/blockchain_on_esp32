@@ -37,8 +37,9 @@ int socket_id = -1;
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;
 
-char new_block[BLOCKSIZE] = { 0 };
-char some_block[BLOCKSIZE] = { 0 };
+char new_block[BLOCKSIZE+1] = { 0 };//why BLOCKSIZE+1? reason: in order to get a stop symbol 0, which can stop print in monitor window.
+char some_block[BLOCKSIZE+1] = { 0 };
+char latest_block[BLOCKSIZE+1] = { 0 };
 
 /* The event group allows multiple bits for each event,
    but we only care about one event - are we connected
@@ -162,9 +163,9 @@ static void ota_example_task(void *pvParameter)
     ESP_LOGW(TAG,"The new block is :%s",new_block);
 
     latest_block_write( new_block );
-    latest_block_read( some_block , BLOCKSIZE );
+    latest_block_read( latest_block , BLOCKSIZE );
 
-    ESP_LOGI(TAG, "The latest block is: %s",some_block);
+    ESP_LOGI(TAG, "The latest block is: %s",latest_block);
 
     close(socket_id);
     if (connect_to_http_server()) {
@@ -176,6 +177,20 @@ static void ota_example_task(void *pvParameter)
 
     http_request_whole_chain();
 
+    read_block_on_unv_chain(1 , &some_block , BLOCKSIZE);
+    ESP_LOGI(TAG, "The block with index 1 is: %s",some_block);
+
+    read_block_on_unv_chain(0 , &some_block , BLOCKSIZE);
+    ESP_LOGI(TAG, "The block with index 0 is: %s",some_block);
+
+    read_block_on_ved_chain(1 , &some_block , BLOCKSIZE);
+    ESP_LOGI(TAG, "The block with index 1 is: %s",some_block);
+
+    read_block_on_ved_chain(0 , &some_block , BLOCKSIZE);
+    ESP_LOGI(TAG, "The block with index 0 is: %s",some_block);
+
+
+
     close(socket_id);
     if (connect_to_http_server()) {
         ESP_LOGI(TAG, "Connected to http server");
@@ -184,7 +199,7 @@ static void ota_example_task(void *pvParameter)
         task_fatal_error();
     }
 
-    verified_chain_copy(2);
+    verified_chain_copy(1);
 
     http_request_bin_data();
 
@@ -197,9 +212,22 @@ static void ota_example_task(void *pvParameter)
 
     ESP_LOGI(TAG, "Get Data Header!!!! %s \n",data_header);
 
-    read_block_on_chain(2 , &some_block , BLOCKSIZE);
+    read_block_on_unv_chain(1 , &some_block , BLOCKSIZE);
+    ESP_LOGI(TAG, "The block with index 1 is: %s",some_block);
 
-    ESP_LOGI(TAG, "The second block is: %s",some_block);
+    read_block_on_unv_chain(0 , &some_block , BLOCKSIZE);
+    ESP_LOGI(TAG, "The block with index 0 is: %s",some_block);
+
+    read_block_on_ved_chain(1 , &some_block , BLOCKSIZE);
+    ESP_LOGI(TAG, "The block with index 1 is: %s",some_block);
+
+    read_block_on_ved_chain(0 , &some_block , BLOCKSIZE);
+    ESP_LOGI(TAG, "The block with index 0 is: %s",some_block);
+
+    while(1)
+    {
+
+    };
 
     return ;
 }

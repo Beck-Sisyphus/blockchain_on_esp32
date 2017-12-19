@@ -63,6 +63,9 @@ static bool read_past_http_header(char text[], int total_len, esp_partition_t *p
     /* i means current position */
     esp_err_t err;
     int i = 0, i_read_len = 0;
+    char dst[BLOCKSIZE+1] = { 0 };
+
+    ESP_LOGI(TAG,"the whole data is : %s", text);
     while (text[i] != 0 && i < total_len)
     {
         i_read_len = read_until(&text[i], '\n', total_len);
@@ -73,6 +76,7 @@ static bool read_past_http_header(char text[], int total_len, esp_partition_t *p
             memset(write_data, 0, BUFFSIZE);
             /*copy first http packet body to write buffer*/
             memcpy(write_data, &(text[i + 2]), i_write_len);
+            ESP_LOGI(TAG,"the whole data past header is : %s", write_data);
             //erase before write
             err = esp_partition_erase_range( partition , 0 , partition->size );
             if(err != ESP_OK) {ESP_LOGE(TAG, "Error: Erase partition failed! %d", err); return false;}
@@ -82,9 +86,11 @@ static bool read_past_http_header(char text[], int total_len, esp_partition_t *p
                 ESP_LOGE(TAG, "Error: write failed! err=0x%x", err);
                 return false;
             } else {
+
+
                 ESP_LOGI(TAG, "write header OK");
                 *file_length += i_write_len;
-                if(i + i_write_len + 2 >= BUFFSIZE)
+                if(i + i_write_len + 2 < BUFFSIZE)
                 {
                     ESP_LOGI(TAG,"the total file is writen when read_past_http_header.");
                     *finished = true;
@@ -92,6 +98,10 @@ static bool read_past_http_header(char text[], int total_len, esp_partition_t *p
                     *finished =false;
                 }
                 ESP_LOGI(TAG, "Have written length %d", *file_length);
+                esp_partition_read(partition, 0 , dst, BLOCKSIZE);
+                ESP_LOGI(TAG,"The address is 0x%x,the partition size is 0x%x",partition->address,partition->size);
+                ESP_LOGI(TAG, "read first BLOCKSIZE data from partiton, the content:%s",dst);
+
             }
             return true;
         }

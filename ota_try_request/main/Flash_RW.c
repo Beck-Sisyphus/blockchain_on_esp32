@@ -54,12 +54,12 @@ esp_err_t latest_block_write( const void* src )
     err = esp_partition_erase_range(latest_block_partition , 0 , latest_block_partition->size);
     if(err != ESP_OK) {ESP_LOGE(TAG, "Error: Erase partition failed! %d", err); return err;}
 
-    ESP_LOGE(TAG,"Partition: latest_block is found. address: 0x%08x, size: 0x%08x \n",
+    ESP_LOGI(TAG,"Partition: latest_block is found. address: 0x%08x, size: 0x%08x \n",
              latest_block_partition->address, latest_block_partition->size);
 
     err = esp_partition_write(latest_block_partition, 0 , src , BLOCKSIZE );
 
-    if(err == ESP_OK){ESP_LOGE(TAG,"esp_partition_write genesis_bolck to latest_block succeed!\n");}
+    if(err == ESP_OK){ESP_LOGI(TAG,"esp_partition_write genesis_bolck to latest_block succeed!\n");}
     else{ESP_LOGE(TAG,"esp_partition_write genesis_bolck to latest_block failed! error = %d\n" , err);}
 
     return;
@@ -81,20 +81,20 @@ esp_err_t latest_block_read( void* dst, size_t size )
     if(!latest_block_partition){
         ESP_LOGE(TAG,"CANNOT find latest_block_partition!!\n");return ESP_ERR_NOT_FOUND;
     }else{
-        ESP_LOGE(TAG,"Partition: latest_block is found. address: 0x%08x, size: 0x%08x \n",
+        ESP_LOGI(TAG,"Partition: latest_block is found. address: 0x%08x, size: 0x%08x \n",
                latest_block_partition->address, latest_block_partition->size);
 
         err = esp_partition_read(latest_block_partition, 0 , dst , BLOCKSIZE );
 
-        if(err == ESP_OK){ESP_LOGE(TAG,"esp_partition_read genesis_block from latest_block succeed!\n");}
+        if(err == ESP_OK){ESP_LOGI(TAG,"esp_partition_read genesis_block from latest_block succeed!\n");}
         else{ESP_LOGE(TAG,"esp_partition_read genesis_block from latest_block failed! error = %d\n" , err); return err;}
     }
     return ESP_OK;
 }
 
-esp_err_t write_block_on_chain(uint8_t index , const void* src )
+esp_err_t write_block_on_chain(uint32_t index , const void* src )
 {
-    if(src == NULL){ESP_LOGE(TAG,"ERROR: NULL pointer!\n");return ESP_ERR_INVALID_ARG;}
+    if(src == NULL){ESP_LOGE(TAG,"ERROR: NULL pointer!");return ESP_ERR_INVALID_ARG;}
 
     const esp_partition_t *chain_partition = NULL;
     esp_err_t err;
@@ -104,50 +104,78 @@ esp_err_t write_block_on_chain(uint8_t index , const void* src )
 
     assert(chain_partition != NULL);
     if(!chain_partition){
-        ESP_LOGE(TAG,"CANNOT find ved_chain_partition!!\n");
+        ESP_LOGE(TAG,"CANNOT find ved_chain_partition!!");
     }else{
-        ESP_LOGI(TAG,"Partition: ved_chain is found. address: 0x%08x, size: 0x%08x \n",
+        ESP_LOGI(TAG,"Partition: ved_chain is found. address: 0x%08x, size: 0x%08x ",
                  chain_partition->address, chain_partition->size);
 
         err = esp_partition_write(chain_partition, index*BLOCKSIZE , src , BLOCKSIZE );
 
-        if(err == ESP_OK){ESP_LOGI(TAG,"Write %d th block on chain succeed!\n", index);}
-        else{ESP_LOGE(TAG,"Write %d th block on chain failed! error = %d\n" , index , err);
+        if(err == ESP_OK){ESP_LOGI(TAG,"Write %d th block on chain succeed!", index);}
+        else{ESP_LOGE(TAG,"Write %d th block on chain failed! error = %d" , index , err);
             return err;}
     }
     return ESP_OK;
 }
 
-esp_err_t read_block_on_chain(uint8_t index , void* dst, size_t size)
+esp_err_t read_block_on_unv_chain(uint32_t index , void* dst, size_t size)
 {
     const esp_partition_t *chain_partition = NULL;
     esp_err_t err;
-    char block[BLOCKSIZE] = { 0 };
 
     if(dst == NULL){ESP_LOGE(TAG,"NULL pointer!");return ESP_ERR_INVALID_ARG;}
 
-    if(size != BLOCKSIZE){ESP_LOGE(TAG,"Invalid size!! size should be %d \n",BLOCKSIZE);return ESP_ERR_INVALID_SIZE;}
+    if(size != BLOCKSIZE){ESP_LOGE(TAG,"Invalid size!! size should be %d ",BLOCKSIZE);return ESP_ERR_INVALID_SIZE;}
 
 
     chain_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA,
                                                &UNV_CHAIN_PARTITION_LABEL);
 
     assert(chain_partition != NULL);
-    if(!chain_partition){ESP_LOGE(TAG,"CANNOT find ved_chain_partition!!\n");return ESP_ERR_NOT_FOUND;}
+    if(!chain_partition){ESP_LOGE(TAG,"CANNOT find unv_chain_partition!!\n");return ESP_ERR_NOT_FOUND;}
     else
     {
-        ESP_LOGE(TAG,"Partition: ved_chain is found. address: 0x%08x, size: 0x%08x \n",
+        ESP_LOGI(TAG,"Partition: unv_chain is found. address: 0x%08x, size: 0x%08x \n",
                  chain_partition->address, chain_partition->size);
 
-        err = esp_partition_read(chain_partition, index*BLOCKSIZE , block , BLOCKSIZE );
+        err = esp_partition_read(chain_partition, index*BLOCKSIZE , dst , BLOCKSIZE );
 
-        if(err == ESP_OK){ESP_LOGE(TAG,"Write %d th block on chain succeed!\n", index);}
-        else{ESP_LOGE(TAG,"Write %d th block on chain failed! error = %d\n" , index , err);return err;}
+        if(err == ESP_OK){ESP_LOGI(TAG,"Read %d th block on chain succeed!\n", index);}
+        else{ESP_LOGE(TAG,"Read %d th block on chain failed! error = %d\n" , index , err);return err;}
     }
     return ESP_OK;
 }
 
-esp_err_t verified_chain_copy(uint8_t num)
+esp_err_t read_block_on_ved_chain(uint32_t index , void* dst, size_t size)
+{
+    const esp_partition_t *chain_partition = NULL;
+    esp_err_t err;
+
+    if(dst == NULL){ESP_LOGE(TAG,"NULL pointer!");return ESP_ERR_INVALID_ARG;}
+
+    if(size != BLOCKSIZE){ESP_LOGE(TAG,"Invalid size!! size should be %d ",BLOCKSIZE);return ESP_ERR_INVALID_SIZE;}
+
+
+    chain_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA,
+                                               &VED_CHAIN_PARTITION_LABEL);
+
+    assert(chain_partition != NULL);
+    if(!chain_partition){ESP_LOGE(TAG,"CANNOT find ved_chain_partition!!\n");return ESP_ERR_NOT_FOUND;}
+    else
+    {
+        ESP_LOGI(TAG,"Partition: ved_chain is found. address: 0x%08x, size: 0x%08x \n",
+                 chain_partition->address, chain_partition->size);
+
+        err = esp_partition_read(chain_partition, index*BLOCKSIZE , dst , BLOCKSIZE );
+
+        if(err == ESP_OK){ESP_LOGI(TAG,"Read %d th block on chain succeed!\n", index);}
+        else{ESP_LOGE(TAG,"Read %d th block on chain failed! error = %d\n" , index , err);return err;}
+    }
+    return ESP_OK;
+}
+
+
+esp_err_t verified_chain_copy(uint32_t la_index)
 {
     const esp_partition_t *unv_chain_partition = NULL;
     const esp_partition_t *ved_chain_partition = NULL;
@@ -157,30 +185,30 @@ esp_err_t verified_chain_copy(uint8_t num)
     unv_chain_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA,
                                                    &UNV_CHAIN_PARTITION_LABEL);
     assert(unv_chain_partition != NULL);
-    if(!unv_chain_partition){ESP_LOGE(TAG,"CANNOT find unv_chain_partition!!\n");}
+    if(!unv_chain_partition){ESP_LOGE(TAG,"CANNOT find unv_chain_partition!!");}
 
     ved_chain_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA,
                                                    &VED_CHAIN_PARTITION_LABEL);
     assert(ved_chain_partition != NULL);
-    if(!unv_chain_partition){ESP_LOGE(TAG,"CANNOT find unv_chain_partition!!\n");}
+    if(!unv_chain_partition){ESP_LOGE(TAG,"CANNOT find unv_chain_partition!!");}
 
     //erase before write
     err = esp_partition_erase_range(ved_chain_partition , 0 , ved_chain_partition->size);
     if(err != ESP_OK) {ESP_LOGE(TAG, "Error: Erase partition failed! %d", err); return err;}
 
     //copy
-    for(uint8_t i=0 ; i <= num ; i++)
+    for(uint32_t i=0 ; i <= la_index ; i++)
     {
         err = esp_partition_read(unv_chain_partition, i*BLOCKSIZE , block , BLOCKSIZE );
-        if(err != ESP_OK){ESP_LOGE(TAG,"Read %d th block on ved_chain failed! error = %d\n" , i , err);return err;}
+        if(err != ESP_OK){ESP_LOGE(TAG,"Read %d th block on ved_chain failed! error = %d" , i , err);return err;}
         else
         {
             err = esp_partition_write(ved_chain_partition,i*BLOCKSIZE , block , BLOCKSIZE);
-            if(err != ESP_OK){ESP_LOGE(TAG,"Write %d th block on ved_chain failed! error = %d\n" , i , err);return err;
-            }else{ESP_LOGE(TAG,"Write %d th block on ved_chain succeed!\n",i);}
+            if(err != ESP_OK){ESP_LOGE(TAG,"Write %d th block on ved_chain failed! error = %d" , i , err);return err;
+            }else{ESP_LOGI(TAG,"Write %d th block on ved_chain succeed!",i);}
         }
     }
-    ESP_LOGE(TAG,"Write whole blockchain to ved_chain_partition succeed!\n\n");
+    ESP_LOGI(TAG,"Write whole blockchain to ved_chain_partition succeed!\n");
     return ESP_OK;
 }
 
@@ -191,47 +219,47 @@ esp_err_t verified_data_copy(void)
     esp_err_t err;
     char buffer[DATA_COPY_BUFFER_SIZE] = { 0 };
     char data_header[DATA_HEADER_SIZE] = { 0 };
-    //find partition
+    //find one partition
     unv_data_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA,
                                                   &UNV_DATA_PARTITION_LABEL);
     assert(unv_data_partition != NULL);
-    if(!unv_data_partition){ESP_LOGE(TAG,"CANNOT find unv_data_partition!!\n");return ESP_ERR_NOT_FOUND;}
-    //find partition
+    if(!unv_data_partition){ESP_LOGE(TAG,"CANNOT find unv_data_partition!!");return ESP_ERR_NOT_FOUND;}
+    //find the other partition
     ved_data_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA,
                                                   &VED_DATA_PARTITION_LABEL);
     assert(ved_data_partition != NULL);
-    if(!ved_data_partition){ESP_LOGE(TAG,"CANNOT find ved_data_partition!!\n");return ESP_ERR_NOT_FOUND;}
+    if(!ved_data_partition){ESP_LOGE(TAG,"CANNOT find ved_data_partition!!");return ESP_ERR_NOT_FOUND;}
     //read data header
     err = esp_partition_read(unv_data_partition, ved_data_partition->size - 1 - DATA_HEADER_SIZE , data_header , DATA_HEADER_SIZE);
-    if(err != ESP_OK){ESP_LOGE(TAG,"CANNOT read data header from unv_data_partition!\n");return ESP_ERR_NOT_FOUND;}
+    if(err != ESP_OK){ESP_LOGE(TAG,"CANNOT read data header from unv_data_partition!");return ESP_ERR_NOT_FOUND;}
     //get length
     cJSON *root = NULL;//refer to cJSON library**
     root= cJSON_Parse(data_header);//turn string(data_header) to cJSON object**
-    int length = cJSON_GetObjectItem(root,"length")->valueint;//give value int of "led" to led**
+    uint32_t length = cJSON_GetObjectItem(root,"length")->valueint;//give value int of "led" to led**
     cJSON_Delete(root);//release the area of root**
     //check length
     if(length >= (ved_data_partition->size - 1 - DATA_HEADER_SIZE))
-    {ESP_LOGE(TAG,"ved_data_partition is too small to copy the bin data file!!\n");return ESP_ERR_INVALID_SIZE;}
+    {ESP_LOGE(TAG,"ved_data_partition is too small to copy the bin data file!!");return ESP_ERR_INVALID_SIZE;}
     //erase before write
     err = esp_partition_erase_range(ved_data_partition , 0 , ved_data_partition->size);
     if(err != ESP_OK) {ESP_LOGE(TAG, "Error: Erase partition failed! %d", err); return err;}
     //COPY
-    for( uint8_t i=0 ; i <= length ; i += DATA_COPY_BUFFER_SIZE )
+    for( uint32_t i=0 ; i < length ; i += DATA_COPY_BUFFER_SIZE )
     {
         err = esp_partition_read(unv_data_partition, i , buffer , DATA_COPY_BUFFER_SIZE);
-        if(err != ESP_OK){ESP_LOGE(TAG,"Read from unv_data_partition failed!!\n");return err;}
+        if(err != ESP_OK){ESP_LOGE(TAG,"Read from unv_data_partition failed!!");return err;}
         else
         {
             err = esp_partition_write(ved_data_partition, i , buffer , DATA_COPY_BUFFER_SIZE);
-            if(err != ESP_OK){ESP_LOGE(TAG,"Data write failed at area [%d, %d]. err = %d \n", i, i+DATA_COPY_BUFFER_SIZE , err);return err;}
-            else{ESP_LOGE(TAG,"Have transferred data length %d \n",i+DATA_COPY_BUFFER_SIZE);}
+            if(err != ESP_OK){ESP_LOGE(TAG,"Data write failed at area [%d, %d]. err = %d ", i, i+DATA_COPY_BUFFER_SIZE , err);return err;}
+            else{ESP_LOGI(TAG,"Have transferred data length %d ", i+DATA_COPY_BUFFER_SIZE);}
         }
     }
     //copy data header
     err = esp_partition_write(ved_data_partition, ved_data_partition->size - 1 - DATA_HEADER_SIZE , data_header , DATA_HEADER_SIZE);
-    if(err != ESP_OK){ESP_LOGE(TAG,"Write data_header failed! err= %d \n",err); return err;}
+    if(err != ESP_OK){ESP_LOGE(TAG,"Write data_header failed! err= %d ",err); return err;}
 
-    ESP_LOGE(TAG,"COPY verified data to ved_data_partition finished!\n");
+    ESP_LOGI(TAG,"COPY verified data to ved_data_partition finished!");
     return ESP_OK;
 }
 
@@ -245,10 +273,10 @@ esp_err_t get_data_header_of_unv_data(void *dst)
     unv_data_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA,
                                                   &UNV_DATA_PARTITION_LABEL);
     assert(unv_data_partition != NULL);
-    if(!unv_data_partition){ESP_LOGE(TAG,"CANNOT find unv_data_partition!!\n");return ESP_ERR_NOT_FOUND;}
+    if(!unv_data_partition){ESP_LOGE(TAG,"CANNOT find unv_data_partition!!");return ESP_ERR_NOT_FOUND;}
 
     err = esp_partition_read(unv_data_partition, unv_data_partition->size - 1 - DATA_HEADER_SIZE , dst , DATA_HEADER_SIZE);
-    if(err != ESP_OK){ESP_LOGE(TAG,"CANNOT read data header from unv_data_partition!\n");return ESP_ERR_NOT_FOUND;}
+    if(err != ESP_OK){ESP_LOGE(TAG,"CANNOT read data header from unv_data_partition!");return ESP_ERR_NOT_FOUND;}
 
     return ESP_OK;
 
@@ -264,10 +292,10 @@ esp_err_t get_data_header_of_ved_data(void *dst)
     ved_data_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA,
                                                   &VED_DATA_PARTITION_LABEL);
     assert(ved_data_partition != NULL);
-    if(!ved_data_partition){ESP_LOGE(TAG,"CANNOT find ved_data_partition!!\n");return ESP_ERR_NOT_FOUND;}
+    if(!ved_data_partition){ESP_LOGE(TAG,"CANNOT find ved_data_partition!!");return ESP_ERR_NOT_FOUND;}
 
     err = esp_partition_read(ved_data_partition, ved_data_partition->size - 1 - DATA_HEADER_SIZE , dst , DATA_HEADER_SIZE);
-    if(err != ESP_OK){ESP_LOGE(TAG,"CANNOT read data header from ved_data_partition!\n");return ESP_ERR_NOT_FOUND;}
+    if(err != ESP_OK){ESP_LOGE(TAG,"CANNOT read data header from ved_data_partition!");return ESP_ERR_NOT_FOUND;}
 
     return ESP_OK;
 }
