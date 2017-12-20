@@ -168,8 +168,6 @@ esp_err_t http_request_bin_data(void)
         memset(text, 0, TEXT_BUFFSIZE);
         memset(write_data, 0, BUFFSIZE);
         int buff_len = recv(socket_id, text, TEXT_BUFFSIZE, 0);
-        ESP_LOGI(TAG, "buff_len of the bin file is %d\n", buff_len);
-        ESP_LOGI(TAG, "received raw in the bin file: %s\n", text);
         if (buff_len < 0) { /*receive error*/
             ESP_LOGE(TAG, "Error: receive data error! errno=%d", errno);
             task_fatal_error();
@@ -257,8 +255,6 @@ esp_err_t http_request_whole_chain( void )
         memset(text, 0, TEXT_BUFFSIZE);
         memset(write_data, 0, BUFFSIZE);
         int buff_len = recv(socket_id, text, TEXT_BUFFSIZE, 0);
-        ESP_LOGI(TAG, "buff_len in the whole chain is %d", buff_len);
-        ESP_LOGI(TAG, "received raw in the whole chain: %s", text);
         if (buff_len < 0) { /*receive error*/
             ESP_LOGE(TAG, "Error: receive data error! errno=%d", errno);
             task_fatal_error();
@@ -337,8 +333,7 @@ esp_err_t http_request_new_block( void *new_block )
         memset(text, 0, TEXT_BUFFSIZE);
         memset(write_data, 0, BUFFSIZE);
         int buff_len = recv(socket_id, text, TEXT_BUFFSIZE, 0);
-        ESP_LOGI(TAG, "buff_len is %d", buff_len);
-        ESP_LOGI(TAG, "received raw in latest block: %s", text);
+
         if (buff_len < 0) { /*receive error*/
             ESP_LOGE(TAG, "Error: receive data error! errno=%d", errno);
             task_fatal_error();
@@ -346,10 +341,12 @@ esp_err_t http_request_new_block( void *new_block )
         { /*deal with response header*/
             memcpy(write_data, text, buff_len);
             int i = 0, i_read_len = 0 , total_len = buff_len;
-            while (text[i] != 0 && i < total_len) {
+            while (text[i] != 0 && i < total_len)
+            {
                 i_read_len = read_until(&text[i], '\n', total_len);
-                // if we resolve \r\n line,we think packet header is finished
-                if (i_read_len == 2) {
+                // if we resolve \r\n line, we think packet header is finished
+                if (i_read_len == 2)
+                {
                     int i_write_len = total_len - (i + 2);
                     memset(write_data, 0, BUFFSIZE);
                     /*copy first http packet body to write buffer*/
