@@ -345,11 +345,13 @@ esp_err_t http_request_new_block( void *new_block )
         } else if (buff_len > 0 && !resp_body_start)
         { /*deal with response header*/
             memcpy(write_data, text, buff_len);
-            int i = 0, i_read_len = 0 , total_len = buff_len;
+            int i = 0, i_read_len = 0;
+            int total_len = buff_len;
             while (text[i] != 0 && i < total_len) {
                 i_read_len = read_until(&text[i], '\n', total_len);
                 // if we resolve \r\n line,we think packet header is finished
                 if (i_read_len == 2) {
+                    resp_body_start = true;
                     int i_write_len = total_len - (i + 2);
                     memset(write_data, 0, BUFFSIZE);
                     /*copy first http packet body to write buffer*/
@@ -368,7 +370,16 @@ esp_err_t http_request_new_block( void *new_block )
                 i += i_read_len;
             }
             ESP_LOGI(TAG, "Have length %d", latest_block_length);
-        } else if (buff_len == 0) {  /*packet over*/
+        }
+        else if (buff_len > 0 && resp_body_start)
+        { /*After the empty line is found*/
+            memcpy(write_data  , text, buff_len);
+            memcpy(new_block+latest_block_length, write_data , buff_len);
+            latest_block_length += buff_len;
+            ESP_LOGI(TAG, "Have written length %d", latest_block_length);
+            break;
+        }
+        else if (buff_len == 0) {  /*packet over*/
             flag = false;
             ESP_LOGI(TAG, "latest_block request finished, all packets received");
             close(socket_id);

@@ -13,8 +13,8 @@
 #include "event.h"
 
 
-#define EXAMPLE_DEFAULT_SSID "MERCURY_B8FA"
-#define EXAMPLE_DEFAULT_PWD ""
+#define EXAMPLE_DEFAULT_SSID "beck_hotspot"
+#define EXAMPLE_DEFAULT_PWD "hkustrobotics"
 
 #define EXAMPLE_MAX_STA_CONN 1 
 
